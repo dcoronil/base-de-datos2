@@ -1,0 +1,266 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Connect</title>
+    <style>
+        :root { --bg:#0c1118; --card:#131924; --border:#243044; --text:#e5e7eb; --muted:#9ca3af; --accent:#60a5fa; --accent-2:#4ade80; }
+        *{box-sizing:border-box;} body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);} header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;} .brand{font-weight:800;} .nav-btn{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;} .nav-btn.active{background:var(--accent);color:#0b0f16;border-color:var(--accent);} main{padding:18px;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;} .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;} h2{margin:0 0 8px;} p{margin:4px 0;color:var(--muted);} .input,textarea{width:100%;background:#0b0f16;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px;} textarea{min-height:80px;} .hidden{display:none;} .btn{border:none;border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--accent-2),#22c55e);color:#0b0f16;} .btn.secondary{background:linear-gradient(135deg,var(--accent),#2563eb);color:#0b0f16;} .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#1f2937;color:var(--text);border:1px solid var(--border);margin:2px;font-size:12px;} .list{display:flex;flex-direction:column;gap:8px;} .item{padding:10px;border:1px solid var(--border);border-radius:8px;} .chat-box{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:#0b0f16;} .muted{color:var(--muted);} .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    </style>
+</head>
+<body>
+<header>
+    <div class="brand">Campus-Connect</div>
+    <button class="nav-btn active" data-section="dash" onclick="showSection('dash')">Dashboard</button>
+    <button class="nav-btn" data-section="profile" onclick="showSection('profile')">Perfil</button>
+    <button class="nav-btn" data-section="chat" onclick="showSection('chat')">Chat</button>
+    <button class="nav-btn" data-section="admin" onclick="showSection('admin')">Admin</button>
+    <div style="flex:1;"></div>
+    <div id="auth-bar" class="row">
+        <div id="auth-form" class="row">
+            <input id="username" class="input" placeholder="usuario" style="max-width:140px;">
+            <input id="password" type="password" class="input" placeholder="contrasena" style="max-width:140px;">
+            <button id="login-btn" class="btn" onclick="login()">Login</button>
+        </div>
+        <div id="auth-user" class="muted hidden"></div>
+        <button id="logout-btn" class="btn secondary hidden" onclick="logout()">Logout</button>
+        <div id="login-error" style="color:#f87171;"></div>
+    </div>
+</header>
+
+<main>
+    <section id="dash">
+        <div class="grid">
+            <div class="card">
+                <h2>Proyectos recomendados</h2>
+                <div id="dash-projects" class="list muted">Inicia sesion y anade tus skills para recomendaciones por skills requeridas.</div>
+            </div>
+            <div class="card">
+                <h2>Proyectos y miembros</h2>
+                <div id="all-projects" class="list"></div>
+            </div>
+            <div class="card">
+                <h2>Crear nuevo proyecto</h2>
+                <input id="new-proj-title" class="input" placeholder="Titulo del proyecto">
+                <textarea id="new-proj-desc" class="input" placeholder="Descripcion breve"></textarea>
+                <input id="new-proj-skills" class="input" placeholder="Skills requeridas (comas)">
+                <button class="btn" style="margin-top:8px;" onclick="createProject()">Crear</button>
+                <p class="muted" id="proj-create-msg"></p>
+            </div>
+        </div>
+    </section>
+
+    <section id="profile" class="hidden">
+        <div class="grid">
+            <div class="card">
+                <h2>Mi perfil</h2>
+                <div id="me-box" class="muted">Autentica para ver tus datos.</div>
+            </div>
+            <div class="card">
+                <h2>Mis skills</h2>
+                <div id="profile-skills" class="muted">Sin datos</div>
+                <div class="row" style="margin-top:8px;">
+                    <input id="new-skill" class="input" placeholder="Anadir skill">
+                    <button class="btn secondary" onclick="addSkill()">Anadir</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="chat" class="hidden">
+        <div class="grid">
+            <div class="card">
+                <h2>Chat del proyecto</h2>
+                <select id="chat-project" class="input" onchange="changeProjectChat(this.value)"></select>
+                <div id="chat-box" class="chat-box muted">Sin mensajes</div>
+                <textarea id="chat-input" placeholder="Escribe un mensaje..." disabled></textarea>
+                <div class="row">
+                    <input id="chat-sender" class="input" placeholder="alias" value="Invitado" readonly style="max-width:200px;">
+                    <button id="chat-send-btn" class="btn secondary" onclick="sendChat()" disabled>Enviar</button>
+                </div>
+                <p id="chat-hint" class="muted">Inicia sesion para chatear.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="admin" class="hidden">
+        <div class="grid">
+            <div class="card">
+                <h2>Panel Admin</h2>
+                <p class="muted">Metricas basicas (simuladas).</p>
+                <div id="admin-metrics" class="list">
+                    <div class="item">Proyectos activos: <span id="metric-projects">-</span></div>
+                    <div class="item">Usuarios: 24</div>
+                    <div class="item">Mensajes (chat): <span id="metric-chat">0</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+const STORAGE_KEYS = { access: "cc_access", refresh: "cc_refresh", username: "cc_username" };
+const state = {
+    access: null,
+    refresh: null,
+    username: "Invitado",
+    chat: [],
+    selectedProject: "1",
+    memberships: [],
+    skills: [],
+    projects: [
+        { id: "1", title: "Plataforma IA Educativa", desc: "Recomendaciones personalizadas", skills: ["Python","Django","Neo4j"], owner: "Ana", ownerSkills: ["Python","Pandas"], members: ["Ana","Luis"], status: "open" },
+        { id: "2", title: "Chat Colaborativo", desc: "Mensajeria en tiempo real", skills: ["Redis","WebSockets","JS"], owner: "Luis", ownerSkills: ["JS","Redis"], members: ["Luis","Marta"], status: "open" },
+        { id: "3", title: "Analytics Cursos", desc: "Dashboard de Metricas", skills: ["MongoDB","React"], owner: "Marta", ownerSkills: ["React","SQL"], members: ["Marta"], status: "closed" },
+    ],
+};
+
+function showSection(id){
+    document.querySelectorAll("section").forEach(s=>s.classList.add("hidden"));
+    const target=document.getElementById(id); if(target) target.classList.remove("hidden");
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    const btn=document.querySelector(`.nav-btn[data-section='${id}']`); if(btn) btn.classList.add("active");
+    if(id==="profile" && state.access){ fetchSkills(); }
+    if(id==="dash"){ renderProjectsFull(); filterRecommended(); }
+}
+function authHeaders(){ return state.access ? { Authorization: "Bearer "+state.access } : {}; }
+function persistSession(){
+    state.access ? localStorage.setItem(STORAGE_KEYS.access,state.access) : localStorage.removeItem(STORAGE_KEYS.access);
+    state.refresh ? localStorage.setItem(STORAGE_KEYS.refresh,state.refresh) : localStorage.removeItem(STORAGE_KEYS.refresh);
+    state.username ? localStorage.setItem(STORAGE_KEYS.username,state.username) : localStorage.removeItem(STORAGE_KEYS.username);
+}
+async function loadSession(){
+    const access=localStorage.getItem(STORAGE_KEYS.access);
+    const refresh=localStorage.getItem(STORAGE_KEYS.refresh);
+    const username=localStorage.getItem(STORAGE_KEYS.username);
+    if(access && username){
+        state.access=access; state.refresh=refresh; state.username=username;
+        updateAuthUI();
+        updateChatSender();
+        fetchMe().catch(()=>{});
+        fetchSkills().catch(()=>{});
+        filterRecommended();
+        renderProjectsFull();
+    } else {
+        updateAuthUI();
+    }
+}
+function updateAuthUI(){
+    const logged=Boolean(state.access);
+    document.getElementById("auth-form").classList.toggle("hidden", logged);
+    document.getElementById("login-btn").classList.toggle("hidden", logged);
+    document.getElementById("logout-btn").classList.toggle("hidden", !logged);
+    const userLabel=document.getElementById("auth-user");
+    if(logged){
+        userLabel.textContent=`Sesion: ${state.username}`;
+        userLabel.classList.remove("hidden");
+    } else {
+        userLabel.classList.add("hidden");
+    }
+    updateChatAuthState();
+}
+function updateChatSender(){ const input=document.getElementById("chat-sender"); if(input) input.value=state.username||"Invitado"; updateChatAuthState(); }
+function updateChatAuthState(){
+    const enabled=Boolean(state.access);
+    const isMember=state.memberships.includes(state.selectedProject);
+    const input=document.getElementById("chat-input");
+    const btn=document.getElementById("chat-send-btn");
+    const hint=document.getElementById("chat-hint");
+    if(input) input.disabled=!enabled || !isMember;
+    if(btn) btn.disabled=!enabled || !isMember;
+    if(hint){
+        if(!enabled) hint.textContent="Inicia sesion para chatear.";
+        else if(!isMember) hint.textContent="Unete al proyecto para chatear.";
+        else hint.textContent="Estas autenticado. Puedes enviar mensajes.";
+    }
+}
+async function login(){
+    const user=document.getElementById("username").value.trim();
+    const pass=document.getElementById("password").value.trim();
+    const err=document.getElementById("login-error"); err.textContent="";
+    if(!user||!pass){ err.textContent="Introduce usuario y contrasena"; return; }
+    try{
+        const r=await fetch("/api/auth/token/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,password:pass})});
+        if(!r.ok){ const msg=await r.text(); throw new Error(msg||`HTTP ${r.status}`); }
+        const data=await r.json();
+        state.access=data.access; state.refresh=data.refresh; state.username=user;
+        persistSession(); updateAuthUI(); updateChatSender(); showSection("dash");
+        fetchMe().catch(()=>{}); fetchSkills().catch(()=>{}); filterRecommended(); renderProjectsFull();
+    }catch(e){ err.textContent=e?.message||e; }
+}
+function logout(){
+    state.access=null; state.refresh=null; state.username="Invitado"; state.chat=[]; state.skills=[]; state.memberships=[];
+    persistSession(); updateChatSender();
+    document.getElementById("chat-box").textContent="Sin mensajes";
+    document.getElementById("chat-box").classList.add("muted");
+    document.getElementById("dash-projects").textContent="Inicia sesion para recomendaciones.";
+    renderProjectsFull(); updateAuthUI(); showSection("dash");
+}
+async function fetchMe(){ const r=await fetch("/api/me/",{headers:authHeaders()}); if(!r.ok) throw new Error(await r.text()); const data=await r.json(); state.username=data.username||state.username; }
+function renderProjectsFull(){
+    const node=document.getElementById("all-projects"); if(!node) return;
+    const metric=document.getElementById("metric-projects"); if(metric) metric.textContent=state.projects.length;
+    node.innerHTML=state.projects.map(p=>`
+        <div class="item">
+            <strong>${p.title}</strong> · <span class="muted">${p.desc}</span><br>
+            <span class="muted">Dueno: ${p.owner}</span><br>
+            <div>${(p.skills||[]).map(s=>`<span class="badge">${s}</span>`).join("")}</div>
+            <div class="muted">Miembros: ${(p.members||[]).join(", ") || "N/A"}</div>
+            <div class="muted">Estado: ${state.memberships.includes(p.id)?"Eres miembro":"No eres miembro"}</div>
+            <div class="row" style="margin-top:6px;">
+                <button class="btn secondary" onclick="changeProjectChat('${p.id}')">Ver chat</button>
+                ${state.memberships.includes(p.id)?"":`<button class="btn" onclick="joinProject('${p.id}')">Unirme</button>`}
+            </div>
+        </div>`).join("");
+    const select=document.getElementById("chat-project"); if(select){ select.innerHTML=state.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join(""); select.value=state.selectedProject; }
+}
+function filterRecommended(){
+    const node=document.getElementById("dash-projects"); if(!node) return;
+    if(!state.skills.length){ node.textContent="Anade skills para recibir recomendaciones."; node.classList.remove("muted"); return; }
+    const recs=state.projects.filter(p=> (p.skills||[]).some(s=>state.skills.includes(s)) );
+    if(!recs.length){ node.textContent="Sin coincidencias con tus skills."; node.classList.remove("muted"); return; }
+    node.classList.remove("muted");
+    node.innerHTML=recs.map(p=>`<div class="item"><strong>${p.title}</strong><br><span class="muted">${p.desc}</span></div>`).join("");
+}
+async function fetchSkills(){ const r=await fetch("/api/skills/",{headers:authHeaders()}); if(!r.ok) throw new Error(await r.text()); const data=await r.json(); state.skills=data.skills||[]; state.memberships=data.projects||state.memberships; document.getElementById("profile-skills").innerHTML=state.skills.map(s=>`<span class="badge">${s}</span>`).join("")||"Sin datos"; renderProjectsFull(); filterRecommended(); updateChatAuthState(); }
+async function loadChat(){
+    try{
+        const r=await fetch(`/api/chat/?project=${encodeURIComponent(state.selectedProject)}`,{headers:{...authHeaders()}});
+        if(!r.ok) throw new Error(await r.text());
+        const data=await r.json();
+        state.chat=data;
+        renderChat();
+    }catch(err){
+        console.error("Error cargando chat:",err);
+    }finally{
+        updateChatAuthState();
+    }
+}
+function renderChat(){ const box=document.getElementById("chat-box"); if(!state.chat.length){ box.textContent="Sin mensajes"; box.classList.add("muted"); return; } box.classList.remove("muted"); box.innerHTML=state.chat.map(m=>`<div class="item"><strong>${m.sender||"anon"}</strong><br><span class="muted">${m.ts||""}</span><br>${m.message}</div>`).join(""); box.scrollTop=box.scrollHeight; const metric=document.getElementById("metric-chat"); if(metric) metric.textContent=state.chat.length; }
+async function sendChat(){
+    const message=document.getElementById("chat-input").value||"";
+    const sender=state.username||"Invitado";
+    if(!message.trim()) return;
+    try{
+        const r=await fetch(`/api/chat/?project=${encodeURIComponent(state.selectedProject)}`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json",...authHeaders()},
+            body:JSON.stringify({sender,message,project:state.selectedProject})
+        });
+        if(!r.ok) throw new Error(await r.text());
+        document.getElementById("chat-input").value="";
+        await loadChat();
+    }catch(err){
+        alert("No se pudo enviar el mensaje: "+err);
+    }
+}
+function changeProjectChat(id){ state.selectedProject=id||state.selectedProject; const select=document.getElementById("chat-project"); if(select) select.value=state.selectedProject; loadChat(); showSection("chat"); }
+function addSkill(){ const input=document.getElementById("new-skill"); const skill=input.value.trim(); if(!skill) return; fetch("/api/skills/",{method:"POST",headers:{"Content-Type":"application/json",...authHeaders()},body:JSON.stringify({skill})}) .then(r=>{ if(!r.ok) return r.text().then(t=>{throw new Error(t);}); return r.json(); }) .then(data=>{ state.skills=data.skills||state.skills; state.memberships=data.projects||state.memberships; document.getElementById("profile-skills").innerHTML=state.skills.map(s=>`<span class="badge">${s}</span>`).join(""); renderProjectsFull(); filterRecommended(); updateChatAuthState(); input.value=""; }) .catch(err=>{ document.getElementById("profile-skills").textContent="Error guardando skill: "+err; }); }
+function joinProject(id){ if(!state.access){ alert("Debes iniciar sesion antes de unirte a un proyecto."); return; } fetch("/api/projects/join/",{method:"POST",headers:{"Content-Type":"application/json",...authHeaders()},body:JSON.stringify({project:id})}) .then(r=>{ if(!r.ok) return r.text().then(t=>{throw new Error(t);}); return r.json(); }) .then(data=>{ state.memberships=data.projects||state.memberships; renderProjectsFull(); updateChatAuthState(); }) .catch(err=>alert("No se pudo unir: "+err)); }
+function createProject(){ if(!state.access){ document.getElementById("proj-create-msg").textContent="Inicia sesion para crear."; return; } const title=document.getElementById("new-proj-title").value.trim(); const desc=document.getElementById("new-proj-desc").value.trim(); const skills=(document.getElementById("new-proj-skills").value||"").split(",").map(s=>s.trim()).filter(Boolean); if(!title){ document.getElementById("proj-create-msg").textContent="Titulo requerido."; return; } const newId=String(Date.now()); state.projects.push({id:newId,title,desc,skills,owner:state.username,ownerSkills:state.skills,members:[state.username],status:"open"}); document.getElementById("proj-create-msg").textContent="Proyecto creado (demo local)."; renderProjectsFull(); filterRecommended(); document.getElementById("new-proj-title").value=""; document.getElementById("new-proj-desc").value=""; document.getElementById("new-proj-skills").value=""; }
+
+renderProjectsFull(); renderChat(); loadChat(); setInterval(loadChat,4000); loadSession();
+</script>
+</body>
+</html>

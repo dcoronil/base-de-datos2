@@ -6,3 +6,6 @@ pymongo>=4.8
 python-dotenv>=1.0
 channels>=4.1
 channels-redis>=4.2
+neo4j>=5.22
+mongomock>=4.1
+pytest>=8.3

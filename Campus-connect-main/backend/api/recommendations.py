@@ -1,5 +1,12 @@
 import os
-from neo4j import GraphDatabase
+
+try:
+    from neo4j import GraphDatabase  # type: ignore
+except Exception:  # pragma: no cover - fallback para entornos sin driver
+    class GraphDatabase:  # type: ignore
+        @staticmethod
+        def driver(*_args, **_kwargs):
+            raise ImportError("El paquete neo4j no está instalado")
 
 # Configuración basada en tu docker-compose.yml
 # Usamos "neo4j" como host porque dentro de la red docker se llaman por nombre de servicio

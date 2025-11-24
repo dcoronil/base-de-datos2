@@ -49,7 +49,7 @@ def _append_log_row(
     error: str = "-",
     next_steps: str = "None",
 ) -> None:
-    timestamp = _dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    timestamp = _dt.datetime.now(tz=_dt.timezone.utc).isoformat(timespec="seconds")
     sanitized_description = description.replace("|", "/")
     sanitized_command = command.replace("|", "/")
     sanitized_files = files.replace("|", "/") if files else "N/A"
